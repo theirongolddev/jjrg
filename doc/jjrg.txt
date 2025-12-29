@@ -1,0 +1,168 @@
+*jjrg.txt*  Search jj diff with ripgrep
+
+Author:  Your Name
+License: MIT
+
+==============================================================================
+CONTENTS                                                      *jjrg-contents*
+
+    1. Introduction .......................... |jjrg-introduction|
+    2. Requirements .......................... |jjrg-requirements|
+    3. Installation .......................... |jjrg-installation|
+    4. Configuration ......................... |jjrg-configuration|
+    5. Commands .............................. |jjrg-commands|
+    6. Lua API ............................... |jjrg-api|
+    7. Keymaps ............................... |jjrg-keymaps|
+
+==============================================================================
+1. INTRODUCTION                                           *jjrg-introduction*
+
+jjrg is a Neovim plugin for quickly searching through jj (Jujutsu) diffs
+using ripgrep. It integrates with telescope.nvim and snacks.nvim for fuzzy
+picking of results.
+
+==============================================================================
+2. REQUIREMENTS                                           *jjrg-requirements*
+
+- Neovim >= 0.9.0
+- jj (Jujutsu) - https://github.com/martinvonz/jj
+- ripgrep (rg) - https://github.com/BurntSushi/ripgrep
+
+Optional:~
+- telescope.nvim for fuzzy picker
+- snacks.nvim for fuzzy picker
+
+==============================================================================
+3. INSTALLATION                                           *jjrg-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      "username/jjrg",
+      dependencies = {
+        "nvim-telescope/telescope.nvim", -- optional
+        -- or
+        "folke/snacks.nvim", -- optional
+      },
+      config = function()
+        require("jjrg").setup()
+      end,
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      "username/jjrg",
+      config = function()
+        require("jjrg").setup()
+      end,
+    }
+<
+
+==============================================================================
+4. CONFIGURATION                                         *jjrg-configuration*
+
+Call `setup()` with a table of options:
+>lua
+    require("jjrg").setup({
+      -- Additional ripgrep arguments
+      rg_args = { "--color=never", "--no-heading", "--with-filename", "--line-number" },
+
+      -- Additional jj diff arguments
+      jj_args = {},
+
+      -- Use telescope picker if available
+      use_telescope = true,
+
+      -- Use snacks.nvim picker if available (takes priority over telescope)
+      use_snacks = true,
+
+      -- Auto-open quickfix after search (fallback when no picker available)
+      quickfix_open = true,
+    })
+<
+
+                                                          *jjrg-config-rg_args*
+rg_args ~
+    Additional arguments to pass to ripgrep.
+    Default: `{ "--color=never", "--no-heading", "--with-filename", "--line-number" }`
+
+                                                          *jjrg-config-jj_args*
+jj_args ~
+    Additional arguments to pass to `jj diff`.
+    Default: `{}`
+
+                                                    *jjrg-config-use_telescope*
+use_telescope ~
+    Use telescope.nvim for displaying results if available.
+    Default: `true`
+
+                                                       *jjrg-config-use_snacks*
+use_snacks ~
+    Use snacks.nvim for displaying results if available (takes priority).
+    Default: `true`
+
+                                                    *jjrg-config-quickfix_open*
+quickfix_open ~
+    Automatically open the quickfix window when using quickfix fallback.
+    Default: `true`
+
+==============================================================================
+5. COMMANDS                                                   *jjrg-commands*
+
+                                                                *:JjrgSearch*
+:JjrgSearch {pattern}
+    Search the jj diff for {pattern} using ripgrep and display results.
+
+                                                                      *:Jjrg*
+:Jjrg
+    Open the live search picker (snacks or telescope).
+
+                                                                  *:JjrgDiff*
+:JjrgDiff
+    Show the full jj diff in a vertical split buffer.
+
+                                                             *:JjrgTelescope*
+:JjrgTelescope
+    Force open search with Telescope picker.
+
+                                                                *:JjrgSnacks*
+:JjrgSnacks
+    Force open search with Snacks picker.
+
+==============================================================================
+6. LUA API                                                         *jjrg-api*
+
+                                                              *jjrg.setup()*
+jjrg.setup({opts})
+    Initialize the plugin with optional configuration.
+
+                                                             *jjrg.search()*
+jjrg.search({pattern}, {opts?})
+    Search the jj diff for {pattern}.
+
+    Options:~
+      - jj_args: Additional jj diff arguments
+      - use_telescope: Force telescope picker
+      - use_snacks: Force snacks picker
+
+                                                               *jjrg.live()*
+jjrg.live({opts?})
+    Open the live search picker.
+
+                                                          *jjrg.show_diff()*
+jjrg.show_diff()
+    Show the full jj diff in a buffer.
+
+==============================================================================
+7. KEYMAPS                                                     *jjrg-keymaps*
+
+No default keymaps are set. Suggested mappings:
+>lua
+    vim.keymap.set("n", "<leader>jj", "<cmd>Jjrg<cr>", { desc = "Search jj diff" })
+    vim.keymap.set("n", "<leader>jd", "<cmd>JjrgDiff<cr>", { desc = "Show jj diff" })
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
