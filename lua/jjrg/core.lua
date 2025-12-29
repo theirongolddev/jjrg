@@ -1,7 +1,10 @@
 -- jjrg/core.lua
 -- Core functionality for searching jj diff with ripgrep
+-- TODO: Add support for searching specific revisions
+-- FIXME: Handle binary files better
 
 local M = {}
+local VERSION = "0.1.0"
 local config = require("jjrg.config")
 
 ---@class JjrgMatch

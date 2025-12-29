@@ -1,5 +1,7 @@
 # jjrg
 
+> Fast and fuzzy search through your jj diffs
+
 Search [jj (Jujutsu)](https://github.com/martinvonz/jj) diffs with [ripgrep](https://github.com/BurntSushi/ripgrep) in Neovim.
 
 ## Features

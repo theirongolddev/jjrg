@@ -17,6 +17,9 @@ M.defaults = {
   use_telescope = true,
   use_snacks = true,
   quickfix_open = true,
+  -- New options for future features
+  max_results = 100,
+  context_lines = 3,
 }
 
 ---@type JjrgConfig
