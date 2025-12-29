@@ -83,14 +83,16 @@ function M.live_search(opts)
   local max_filename_len = 0
 
   for i, line in ipairs(lines) do
-    -- Track current file from diff headers
-    local file_match = line:match("^%+%+%+ b/(.+)$")
+    -- Track current file from diff headers (jj format: "Modified regular file path/to/file:")
+    local file_match = line:match("^Modified regular file (.+):$")
+      or line:match("^Added regular file (.+):$")
+      or line:match("^Removed regular file (.+):$")
     if file_match then
       current_file = file_match
     end
 
-    -- Include lines that have actual content (skip empty and diff metadata)
-    if current_file and line ~= "" and not line:match("^diff ") and not line:match("^index ") and not line:match("^%-%-%-") and not line:match("^%+%+%+") and not line:match("^@@") then
+    -- Include lines that have actual content (skip file headers and "..." markers)
+    if current_file and line ~= "" and not line:match("^Modified ") and not line:match("^Added ") and not line:match("^Removed ") and not line:match("^%s*%.%.%.$") then
       max_filename_len = math.max(max_filename_len, #current_file)
       table.insert(items, {
         idx = #items + 1,

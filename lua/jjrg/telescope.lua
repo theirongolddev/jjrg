@@ -1,5 +1,7 @@
 -- jjrg/telescope.lua
 -- Telescope picker for jj diff search results
+-- NOTE: Requires telescope.nvim to be installed
+-- WARNING: Large diffs may cause performance issues
 
 local M = {}
 

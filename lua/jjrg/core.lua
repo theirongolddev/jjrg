@@ -1,7 +1,9 @@
 -- jjrg/core.lua
 -- Core functionality for searching jj diff with ripgrep
 -- TODO: Add support for searching specific revisions
+-- TODO: Add caching for repeated searches
 -- FIXME: Handle binary files better
+-- FIXME: Improve error messages for missing dependencies
 
 local M = {}
 local VERSION = "0.1.0"
@@ -87,11 +89,14 @@ function M.search_diff(pattern, diff_content)
   local lines = vim.split(diff_content, "\n")
   local current_file = nil
 
-  -- Build file map from diff headers
+  -- Build file map from diff headers (jj format: "Modified regular file path/to/file:")
   local file_map = {} -- line_num -> filename
   for i, line in ipairs(lines) do
-    if line:match("^%+%+%+ b/(.+)$") then
-      current_file = line:match("^%+%+%+ b/(.+)$")
+    local file_match = line:match("^Modified regular file (.+):$")
+      or line:match("^Added regular file (.+):$")
+      or line:match("^Removed regular file (.+):$")
+    if file_match then
+      current_file = file_match
     end
     if current_file then
       file_map[i] = current_file

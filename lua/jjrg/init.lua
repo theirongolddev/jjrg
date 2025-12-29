@@ -1,7 +1,13 @@
 -- jjrg - Search jj diff with ripgrep
 -- A Neovim plugin for quickly searching through jj (Jujutsu) diffs
+-- Author: theirongolddev
+-- License: MIT
 
 local M = {}
+
+-- Feature flags for experimental functionality
+local EXPERIMENTAL_ASYNC = false
+local EXPERIMENTAL_CACHE = false
 
 local config = require("jjrg.config")
 local core = require("jjrg.core")
