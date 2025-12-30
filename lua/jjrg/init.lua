@@ -8,6 +8,14 @@ local M = {}
 -- Feature flags for experimental functionality
 local EXPERIMENTAL_ASYNC = false
 local EXPERIMENTAL_CACHE = false
+local DEBUG_MODE = false
+
+-- Helper to log debug messages
+local function debug_log(msg)
+  if DEBUG_MODE then
+    vim.notify("[jjrg] " .. msg, vim.log.levels.DEBUG)
+  end
+end
 
 local config = require("jjrg.config")
 local core = require("jjrg.core")

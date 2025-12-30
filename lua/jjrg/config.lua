@@ -20,6 +20,9 @@ M.defaults = {
   -- New options for future features
   max_results = 100,
   context_lines = 3,
+  -- TODO: implement these options
+  highlight_matches = true,
+  auto_preview = true,
 }
 
 ---@type JjrgConfig
