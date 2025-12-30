@@ -33,19 +33,40 @@ local function parse_diff_line(line)
   return nil, line
 end
 
----Highlight a line temporarily
+---Highlight matched text temporarily
 ---@param bufnr number
 ---@param lnum number 1-indexed line number
+---@param col_start number 0-indexed start column
+---@param col_end number 0-indexed end column (-1 for end of line)
 ---@param duration? number Duration in ms (default 1500)
-local function highlight_line(bufnr, lnum, duration)
+local function highlight_match(bufnr, lnum, col_start, col_end, duration)
   duration = duration or 1500
   vim.api.nvim_buf_clear_namespace(bufnr, hl_ns, 0, -1)
-  vim.api.nvim_buf_add_highlight(bufnr, hl_ns, "Search", lnum - 1, 0, -1)
+  vim.api.nvim_buf_add_highlight(bufnr, hl_ns, "Search", lnum - 1, col_start, col_end)
   vim.defer_fn(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_clear_namespace(bufnr, hl_ns, 0, -1)
     end
   end, duration)
+end
+
+---Find match position in a line (case-insensitive)
+---@param line_content string The line content to search in
+---@param pattern string The search pattern
+---@return number|nil col_start 0-indexed start column
+---@return number|nil col_end 0-indexed end column
+local function find_match_position(line_content, pattern)
+  if not pattern or pattern == "" then
+    return nil, nil
+  end
+  -- Try case-insensitive plain text match first
+  local lower_line = line_content:lower()
+  local lower_pattern = pattern:lower()
+  local start_pos, end_pos = lower_line:find(lower_pattern, 1, true)
+  if start_pos then
+    return start_pos - 1, end_pos -- convert to 0-indexed
+  end
+  return nil, nil
 end
 
 ---Show search results in snacks picker
@@ -156,6 +177,8 @@ function M.live_search(opts)
 
   max_filename_len = max_filename_len + 2
 
+  local search_pattern = ""
+
   Snacks.picker({
     title = "Search JJ Diff",
     items = items,
@@ -173,17 +196,31 @@ function M.live_search(opts)
         vim.bo[ctx.preview.buf].filetype = "diff"
       end
     end,
+    on_change = function(picker)
+      -- Capture the current search pattern
+      search_pattern = picker.input.filter.search or ""
+    end,
     confirm = function(picker, item)
+      -- Capture final search pattern before closing
+      local final_pattern = picker.input.filter.search or search_pattern
       picker:close()
       if item and item.filename and item.filename ~= "unknown" then
         vim.cmd("edit " .. vim.fn.fnameescape(item.filename))
-        -- Jump to line if we have it
         if item.file_lnum then
-          vim.api.nvim_win_set_cursor(0, { item.file_lnum, 0 })
+          local bufnr = vim.api.nvim_get_current_buf()
+          -- Get the actual line content from the file
+          local file_line = vim.api.nvim_buf_get_lines(bufnr, item.file_lnum - 1, item.file_lnum, false)[1] or ""
+          -- Find where the match is in the line
+          local col_start, col_end = find_match_position(file_line, final_pattern)
+          -- Default to beginning of content if no match found
+          col_start = col_start or 0
+          col_end = col_end or (col_start + #final_pattern)
+          -- Set cursor at start of match
+          vim.api.nvim_win_set_cursor(0, { item.file_lnum, col_start })
           -- Center the line on screen
           vim.cmd("normal! zz")
-          -- Highlight the line
-          highlight_line(vim.api.nvim_get_current_buf(), item.file_lnum)
+          -- Highlight only the matched text
+          highlight_match(bufnr, item.file_lnum, col_start, col_end)
         end
       end
     end,

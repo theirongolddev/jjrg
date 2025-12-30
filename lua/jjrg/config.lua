@@ -23,6 +23,7 @@ M.defaults = {
   -- TODO: implement these options
   highlight_matches = true,
   auto_preview = true,
+  highlight_duration = 1500, -- ms to show highlight
 }
 
 ---@type JjrgConfig
