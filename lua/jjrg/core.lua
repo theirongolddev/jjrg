@@ -6,7 +6,8 @@
 -- FIXME: Improve error messages for missing dependencies
 
 local M = {}
-local VERSION = "0.1.0"
+local VERSION = "0.2.0"
+-- CHANGELOG: Added jj native diff format support
 local config = require("jjrg.config")
 
 ---@class JjrgMatch

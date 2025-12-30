@@ -10,6 +10,44 @@ end
 
 local core = require("jjrg.core")
 
+-- Highlight namespace for search matches
+local hl_ns = vim.api.nvim_create_namespace("jjrg_highlight")
+
+---Parse line number from jj diff line format
+---jj format: "   9    9: content" where second number is new line number
+---@param line string
+---@return number|nil file_lnum The line number in the actual file
+---@return string content The line content without line numbers
+local function parse_diff_line(line)
+  -- Match pattern: optional old_num, spaces, new_num, colon, content
+  -- Examples: "   9    9: content" or "       10: content" (added line)
+  local new_lnum, content = line:match("^%s*%d*%s+(%d+):%s?(.*)$")
+  if new_lnum then
+    return tonumber(new_lnum), content
+  end
+  -- Removed lines have format: "  9     : content" - no new line number
+  local removed_content = line:match("^%s*%d+%s+:%s?(.*)$")
+  if removed_content then
+    return nil, removed_content
+  end
+  return nil, line
+end
+
+---Highlight a line temporarily
+---@param bufnr number
+---@param lnum number 1-indexed line number
+---@param duration? number Duration in ms (default 1500)
+local function highlight_line(bufnr, lnum, duration)
+  duration = duration or 1500
+  vim.api.nvim_buf_clear_namespace(bufnr, hl_ns, 0, -1)
+  vim.api.nvim_buf_add_highlight(bufnr, hl_ns, "Search", lnum - 1, 0, -1)
+  vim.defer_fn(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_clear_namespace(bufnr, hl_ns, 0, -1)
+    end
+  end, duration)
+end
+
 ---Show search results in snacks picker
 ---@param matches JjrgMatch[]
 ---@param opts? table
@@ -93,16 +131,21 @@ function M.live_search(opts)
 
     -- Include lines that have actual content (skip file headers and "..." markers)
     if current_file and line ~= "" and not line:match("^Modified ") and not line:match("^Added ") and not line:match("^Removed ") and not line:match("^%s*%.%.%.$") then
-      max_filename_len = math.max(max_filename_len, #current_file)
-      table.insert(items, {
-        idx = #items + 1,
-        score = #items + 1,
-        text = current_file .. " " .. line, -- searchable
-        filename = current_file,
-        match_text = line,
-        lnum = i,
-        diff_context = core.get_context(lines, i, 3),
-      })
+      local file_lnum, content = parse_diff_line(line)
+      -- Only include lines that exist in the new file (have a line number)
+      if file_lnum and content ~= "" then
+        max_filename_len = math.max(max_filename_len, #current_file)
+        table.insert(items, {
+          idx = #items + 1,
+          score = #items + 1,
+          text = current_file .. " " .. content, -- searchable
+          filename = current_file,
+          match_text = content,
+          file_lnum = file_lnum, -- actual line number in file
+          diff_lnum = i,
+          diff_context = core.get_context(lines, i, 3),
+        })
+      end
     end
   end
 
@@ -119,6 +162,7 @@ function M.live_search(opts)
     format = function(item)
       local ret = {}
       ret[#ret + 1] = { ("%-" .. max_filename_len .. "s"):format(item.filename), "SnacksPickerLabel" }
+      ret[#ret + 1] = { string.format(":%d ", item.file_lnum or 0), "SnacksPickerIdx" }
       ret[#ret + 1] = { item.match_text, "SnacksPickerComment" }
       return ret
     end,
@@ -133,6 +177,14 @@ function M.live_search(opts)
       picker:close()
       if item and item.filename and item.filename ~= "unknown" then
         vim.cmd("edit " .. vim.fn.fnameescape(item.filename))
+        -- Jump to line if we have it
+        if item.file_lnum then
+          vim.api.nvim_win_set_cursor(0, { item.file_lnum, 0 })
+          -- Center the line on screen
+          vim.cmd("normal! zz")
+          -- Highlight the line
+          highlight_line(vim.api.nvim_get_current_buf(), item.file_lnum)
+        end
       end
     end,
   })
