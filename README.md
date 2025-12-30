@@ -6,6 +6,7 @@ Search [jj (Jujutsu)](https://github.com/martinvonz/jj) diffs with [ripgrep](htt
 
 ## Features
 
+- test
 - Search through `jj diff` output using ripgrep patterns
 - Live search with [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or [snacks.nvim](https://github.com/folke/snacks.nvim)
 - Preview diff context for each match
