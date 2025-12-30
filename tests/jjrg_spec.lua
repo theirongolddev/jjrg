@@ -4,8 +4,6 @@
 local core = require("jjrg.core")
 local config = require("jjrg.config")
 
--- test - will this work
-
 describe("jjrg", function()
 	describe("config", function()
 		it("should have default configuration", function()
