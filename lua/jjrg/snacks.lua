@@ -14,13 +14,6 @@ local config = require("jjrg.config")
 -- Highlight namespace for search matches
 local hl_ns = vim.api.nvim_create_namespace("jjrg_highlight")
 
--- Debug helper (enable with config.options.debug)
-local function debug(msg)
-  if config.options.debug then
-    vim.notify("[jjrg] " .. msg, vim.log.levels.DEBUG)
-  end
-end
-
 ---Parse line number from jj diff line format
 ---jj format: "   9    9: content" where second number is new line number
 ---@param line string
@@ -152,8 +145,6 @@ function M.show_results(matches, opts)
       local filename = item and item.filename
       local file_lnum = item and item.file_lnum
 
-      debug(string.format("show_results confirm: search='%s' file='%s' lnum=%s", search_text, filename or "nil", tostring(file_lnum)))
-
       picker:close()
 
       if filename and filename ~= "unknown" then
@@ -163,41 +154,28 @@ function M.show_results(matches, opts)
             local bufnr = vim.api.nvim_get_current_buf()
             local buf_name = vim.api.nvim_buf_get_name(bufnr)
             if not buf_name:find(filename, 1, true) then
-              debug("buffer name mismatch: " .. buf_name)
               return
             end
             local line_count = vim.api.nvim_buf_line_count(bufnr)
             if file_lnum > line_count then
-              debug("line out of range")
               return
             end
             local file_lines = vim.api.nvim_buf_get_lines(bufnr, file_lnum - 1, file_lnum, false)
             local file_line = file_lines[1] or ""
 
-            debug(string.format("file_line='%s'", file_line))
-
-            -- Try to find match position using search text
             local col_start, col_end = nil, nil
             if search_text and search_text ~= "" then
               col_start, col_end = find_match_position(file_line, search_text)
-              debug(string.format("find_match: col_start=%s col_end=%s", tostring(col_start), tostring(col_end)))
             end
 
-            -- Set cursor position (default to start of line)
             local cursor_col = col_start or 0
             vim.api.nvim_win_set_cursor(0, { file_lnum, cursor_col })
             vim.cmd("normal! zz")
 
-            -- Highlight the match if found
             if col_start and col_end and col_end > col_start then
-              debug("highlighting match")
               highlight_match(bufnr, file_lnum, col_start, col_end)
-            else
-              debug("no highlight")
             end
           end, 50)
-        else
-          debug("no file_lnum")
         end
       end
     end,
@@ -308,8 +286,6 @@ function M.live_search(opts)
       local filename = item and item.filename
       local file_lnum = item and item.file_lnum
 
-      debug(string.format("confirm: search='%s' file='%s' lnum=%s", search_text, filename or "nil", tostring(file_lnum)))
-
       picker:close()
 
       if filename and filename ~= "unknown" then
@@ -319,41 +295,28 @@ function M.live_search(opts)
             local bufnr = vim.api.nvim_get_current_buf()
             local buf_name = vim.api.nvim_buf_get_name(bufnr)
             if not buf_name:find(filename, 1, true) then
-              debug("buffer name mismatch: " .. buf_name)
               return
             end
             local line_count = vim.api.nvim_buf_line_count(bufnr)
             if file_lnum > line_count then
-              debug("line out of range: " .. file_lnum .. " > " .. line_count)
               return
             end
             local file_lines = vim.api.nvim_buf_get_lines(bufnr, file_lnum - 1, file_lnum, false)
             local file_line = file_lines[1] or ""
 
-            debug(string.format("file_line='%s'", file_line))
-
-            -- Try to find match position using search text
             local col_start, col_end = nil, nil
             if search_text and search_text ~= "" then
               col_start, col_end = find_match_position(file_line, search_text)
-              debug(string.format("find_match: col_start=%s col_end=%s", tostring(col_start), tostring(col_end)))
             end
 
-            -- Set cursor position (default to start of line)
             local cursor_col = col_start or 0
             vim.api.nvim_win_set_cursor(0, { file_lnum, cursor_col })
             vim.cmd("normal! zz")
 
-            -- Highlight the match if found
             if col_start and col_end and col_end > col_start then
-              debug("highlighting match")
               highlight_match(bufnr, file_lnum, col_start, col_end)
-            else
-              debug("no highlight: col_start=" .. tostring(col_start) .. " col_end=" .. tostring(col_end))
             end
           end, 50)
-        else
-          debug("no file_lnum")
         end
       end
     end,

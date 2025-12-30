@@ -30,7 +30,7 @@ M.defaults = {
 	auto_preview = true,
 	highlight_duration = 1500, -- ms to show highlight
 	command_timeout = 10000, -- ms timeout for external commands
-	debug = true, -- enable debug logging (set to false when done testing)
+	debug = false, -- enable debug logging
 }
 
 ---@type JjrgConfig
