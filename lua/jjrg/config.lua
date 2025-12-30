@@ -9,6 +9,12 @@ local M = {}
 ---@field use_telescope boolean Use telescope picker if available
 ---@field use_snacks boolean Use snacks.nvim picker if available (takes priority)
 ---@field quickfix_open boolean Auto-open quickfix after search
+---@field max_results number Maximum number of results to show
+---@field context_lines number Number of context lines around matches
+---@field highlight_matches boolean Highlight matched text in file
+---@field auto_preview boolean Auto-show preview in picker
+---@field highlight_duration number Duration in ms to show highlight
+---@field command_timeout number Timeout in ms for external commands
 
 ---@type JjrgConfig
 M.defaults = {
@@ -17,13 +23,12 @@ M.defaults = {
   use_telescope = true,
   use_snacks = true,
   quickfix_open = true,
-  -- New options for future features
   max_results = 100,
   context_lines = 3,
-  -- TODO: implement these options
   highlight_matches = true,
   auto_preview = true,
   highlight_duration = 1500, -- ms to show highlight
+  command_timeout = 10000, -- ms timeout for external commands
 }
 
 ---@type JjrgConfig
